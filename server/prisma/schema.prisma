@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  name      String
+  role      String   @default("STAFF") // ADMIN, STAFF
+  createdAt DateTime @default(now())
+  tickets   Ticket[]
+  parcels   Parcel[]
+}
+
+model Ticket {
+  id            Int        @id @default(autoincrement())
+  passengerName String
+  phone         String
+  route         String     // SURAT_TO_KOHTAO, KOHTAO_TO_SURAT
+  seatNumber    String
+  seatLayout    String     // LAYOUT_50, LAYOUT_30
+  price         Float
+  travelDate    DateTime
+  createdAt     DateTime   @default(now())
+  sellerId      Int
+  seller        User       @relation(fields: [sellerId], references: [id])
+}
+
+model Parcel {
+  id            Int           @id @default(autoincrement())
+  senderName    String
+  senderPhone   String
+  receiverName  String
+  receiverPhone String
+  weight        Float
+  price         Float
+  status        String        @default("WAITING") // WAITING, DELIVERED
+  paymentStatus String        @default("UNPAID") // UNPAID, PAID
+  depositDate   DateTime
+  createdAt     DateTime      @default(now())
+  sellerId      Int
+  seller        User          @relation(fields: [sellerId], references: [id])
+}
