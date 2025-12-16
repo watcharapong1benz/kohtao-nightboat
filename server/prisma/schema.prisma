@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -19,31 +19,31 @@ model User {
 }
 
 model Ticket {
-  id            Int        @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   passengerName String
   phone         String
-  route         String     // SURAT_TO_KOHTAO, KOHTAO_TO_SURAT
+  route         String // SURAT_TO_KOHTAO, KOHTAO_TO_SURAT
   seatNumber    String
-  seatLayout    String     // LAYOUT_50, LAYOUT_30
+  seatLayout    String // LAYOUT_50, LAYOUT_30
   price         Float
   travelDate    DateTime
-  createdAt     DateTime   @default(now())
+  createdAt     DateTime @default(now())
   sellerId      Int
-  seller        User       @relation(fields: [sellerId], references: [id])
+  seller        User     @relation(fields: [sellerId], references: [id])
 }
 
 model Parcel {
-  id            Int           @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   senderName    String
   senderPhone   String
   receiverName  String
   receiverPhone String
   weight        Float
   price         Float
-  status        String        @default("WAITING") // WAITING, DELIVERED
-  paymentStatus String        @default("UNPAID") // UNPAID, PAID
+  status        String   @default("WAITING") // WAITING, DELIVERED
+  paymentStatus String   @default("UNPAID") // UNPAID, PAID
   depositDate   DateTime
-  createdAt     DateTime      @default(now())
+  createdAt     DateTime @default(now())
   sellerId      Int
-  seller        User          @relation(fields: [sellerId], references: [id])
+  seller        User     @relation(fields: [sellerId], references: [id])
 }

@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: kohtao-nightboat
+    env: node
+    buildCommand: chmod +x render-build.sh && ./render-build.sh
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.9.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kohtao-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+
+databases:
+  - name: kohtao-db
+    databaseName: kohtao
+    user: kohtao

@@ -3,6 +3,7 @@ const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -12,6 +13,8 @@ const SECRET_KEY = process.env.SECRET_KEY || 'supersecretkey';
 
 app.use(cors());
 app.use(express.json());
+// Serve static files from the client build directory
+app.use(express.static(path.join(__dirname, '../client/dist')));
 
 // Middleware to verify token
 const authenticateToken = (req, res, next) => {
@@ -291,6 +294,11 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
     }
 });
 
+
+// Catch-all route to serve the React app
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
