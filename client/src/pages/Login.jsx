@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Ship, Lock, User } from 'lucide-react';
@@ -19,7 +19,7 @@ const Login = () => {
 
         try {
             console.log('Attempting login with:', { username, password: '***' });
-            const res = await axios.post('http://localhost:3001/api/login', {
+            const res = await api.post('/login', {
                 username,
                 password
             });
