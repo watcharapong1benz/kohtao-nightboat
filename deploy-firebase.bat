@@ -1,6 +1,7 @@
 @echo off
 echo ========================================
 echo   Firebase Deployment Script
+echo   Node.js 20 Required
 echo ========================================
 echo.
 
