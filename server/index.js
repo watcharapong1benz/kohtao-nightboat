@@ -78,6 +78,12 @@ app.get('/api/tickets', authenticateToken, async (req, res) => {
                 lte: end
             };
         }
+
+        // AGENT sees only their own tickets
+        if (req.user.role === 'AGENT') {
+            where.sellerId = req.user.id;
+        }
+
         const tickets = await prisma.ticket.findMany({
             where,
             include: { seller: { select: { name: true } } },
@@ -129,6 +135,14 @@ app.put('/api/tickets/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const data = req.body;
     try {
+        // AGENT check ownership
+        if (req.user.role === 'AGENT') {
+            const ticket = await prisma.ticket.findUnique({ where: { id: parseInt(id) } });
+            if (!ticket || ticket.sellerId !== req.user.id) {
+                return res.status(403).json({ message: 'Access denied: You can only edit your own tickets' });
+            }
+        }
+
         if (data.travelDate) data.travelDate = new Date(data.travelDate);
         const ticket = await prisma.ticket.update({
             where: { id: parseInt(id) },
@@ -143,6 +157,14 @@ app.put('/api/tickets/:id', authenticateToken, async (req, res) => {
 app.delete('/api/tickets/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     try {
+        // AGENT check ownership
+        if (req.user.role === 'AGENT') {
+            const ticket = await prisma.ticket.findUnique({ where: { id: parseInt(id) } });
+            if (!ticket || ticket.sellerId !== req.user.id) {
+                return res.status(403).json({ message: 'Access denied: You can only delete your own tickets' });
+            }
+        }
+
         await prisma.ticket.delete({ where: { id: parseInt(id) } });
         res.json({ message: 'Ticket deleted' });
     } catch (error) {
@@ -230,6 +252,119 @@ app.delete('/api/parcels/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// --- USER MANAGEMENT ROUTES (ADMIN ONLY) ---
+
+app.get('/api/users', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'ADMIN') {
+        return res.status(403).json({ message: 'Access denied: Admin only' });
+    }
+    try {
+        const users = await prisma.user.findMany({
+            select: { id: true, username: true, name: true, role: true, createdAt: true }
+        });
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/users', authenticateToken, async (req, res) => {
+    // Check if user is ADMIN
+    // Note: Assuming 'role' is part of the token. If not, fetch user from DB.
+    // The existing login implementation includes 'role' in the token payload.
+    if (req.user.role !== 'ADMIN') {
+        return res.status(403).json({ message: 'Access denied: Admin only' });
+    }
+
+    const { username, password, name, role } = req.body;
+    try {
+        const existingUser = await prisma.user.findUnique({ where: { username } });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username already exists' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = await prisma.user.create({
+            data: {
+                username,
+                password: hashedPassword,
+                name,
+                role: role || 'STAFF',
+            },
+        });
+
+        const { password: _, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// --- MAINTENANCE ROUTES ---
+
+app.get('/api/maintenances', authenticateToken, async (req, res) => {
+    try {
+        const records = await prisma.maintenance.findMany({
+            orderBy: { date: 'desc' },
+        });
+        res.json(records);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/maintenances', authenticateToken, async (req, res) => {
+    const { date, details, imageUrl, status, repairDate, technician } = req.body;
+    try {
+        const maintenance = await prisma.maintenance.create({
+            data: {
+                date: new Date(date),
+                details,
+                imageUrl,
+                status: status || 'WAITING',
+                repairDate: repairDate ? new Date(repairDate) : null,
+                technician,
+            },
+        });
+        res.json(maintenance);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.put('/api/maintenances/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    const { date, details, imageUrl, status, repairDate, technician } = req.body;
+
+    try {
+        const data = {};
+        if (date) data.date = new Date(date);
+        if (details !== undefined) data.details = details;
+        if (imageUrl !== undefined) data.imageUrl = imageUrl;
+        if (status !== undefined) data.status = status;
+        if (repairDate !== undefined) data.repairDate = repairDate ? new Date(repairDate) : null;
+        if (technician !== undefined) data.technician = technician;
+
+        const maintenance = await prisma.maintenance.update({
+            where: { id: parseInt(id) },
+            data,
+        });
+        res.json(maintenance);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/api/maintenances/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        await prisma.maintenance.delete({ where: { id: parseInt(id) } });
+        res.json({ message: 'Maintenance record deleted' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // --- DASHBOARD ROUTES ---
 
 app.get('/api/dashboard', authenticateToken, async (req, res) => {
@@ -296,9 +431,9 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
 
 
 // Catch-all route to serve the React app
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-});
+// app.get('*', (req, res) => {
+//     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+// });
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

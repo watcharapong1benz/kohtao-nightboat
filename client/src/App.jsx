@@ -8,12 +8,20 @@ import TicketSales from './pages/TicketSales';
 import TicketList from './pages/TicketList';
 import ParcelDeposit from './pages/ParcelDeposit';
 import ParcelList from './pages/ParcelList';
+import StaffManagement from './pages/StaffManagement';
+import Maintenance from './pages/Maintenance';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-100">Loading...</div>;
   if (!user) return <Navigate to="/login" />;
   return children;
+};
+
+const HomeRedirect = () => {
+  const { user } = useAuth();
+  if (user?.role === 'AGENT') return <Navigate to="/tickets" />;
+  return <Dashboard />;
 };
 
 const AppRoutes = () => {
@@ -26,11 +34,13 @@ const AppRoutes = () => {
           <Layout />
         </ProtectedRoute>
       }>
-        <Route index element={<Dashboard />} />
+        <Route index element={<HomeRedirect />} />
         <Route path="tickets" element={<TicketSales />} />
         <Route path="tickets/list" element={<TicketList />} />
         <Route path="parcels" element={<ParcelDeposit />} />
         <Route path="parcels/list" element={<ParcelList />} />
+        <Route path="maintenance" element={<Maintenance />} />
+        <Route path="admin/staff" element={<StaffManagement />} />
       </Route>
     </Routes>
   );
