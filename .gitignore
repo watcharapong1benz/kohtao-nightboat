@@ -52,6 +52,7 @@ prisma/migrations/
 # Firebase
 firebase-adminsdk-*.json
 serviceAccountKey.json
+firebase_service_account_compressed.txt
 .firebase/
 firebase-debug.log
 firestore-debug.log
