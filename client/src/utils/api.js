@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 // Use relative path /api which Firebase Hosting will rewrite to Cloud Functions
 // For local development, set VITE_API_URL=http://localhost:3001 in .env
 const API_URL = import.meta.env.VITE_API_URL || '/api';
