@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Ticket, Package, LogOut, Ship } from 'lucide-react';
+import { LayoutDashboard, Ticket, Package, LogOut, Ship, Wrench, Users } from 'lucide-react';
 import clsx from 'clsx';
 
 const Layout = () => {
@@ -14,7 +14,16 @@ const Layout = () => {
         { to: '/tickets/list', icon: Ticket, label: 'รายการตั๋ว' },
         { to: '/parcels', icon: Package, label: 'รับฝากพัสดุ' },
         { to: '/parcels/list', icon: Package, label: 'รายการพัสดุ' },
+        { to: '/maintenance', icon: Wrench, label: 'แจ้งซ่อม/Maintenance' },
     ];
+
+    if (user?.role === 'ADMIN') {
+        navItems.push({ to: '/admin/staff', icon: Users, label: 'จัดการพนักงาน' });
+    }
+
+    const filteredNavItems = user?.role === 'AGENT'
+        ? navItems.filter(item => ['/tickets', '/tickets/list'].includes(item.to))
+        : navItems;
 
     return (
         <div className="flex h-screen bg-slate-100 overflow-hidden">
@@ -28,7 +37,7 @@ const Layout = () => {
                 <div className="px-6 py-4">
                     <div className="text-xs text-slate-400 uppercase tracking-widest mb-2">Menu</div>
                     <nav className="space-y-2">
-                        {navItems.map((item) => (
+                        {filteredNavItems.map((item) => (
                             <Link
                                 key={item.to}
                                 to={item.to}
