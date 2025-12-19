@@ -86,28 +86,33 @@ app.post('/api/register', async (req, res) => {
 app.get('/api/tickets', authenticateToken, async (req, res) => {
     const { date } = req.query; // date string YYYY-MM-DD
     try {
-        let query = db.collection('tickets');
+        // Fetch all tickets ordered by createdAt
+        const snapshot = await db.collection('tickets').orderBy('createdAt', 'desc').get();
+        let tickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+        // Filter by date if provided
         if (date) {
             const start = new Date(date);
             start.setHours(0, 0, 0, 0);
             const end = new Date(date);
             end.setHours(23, 59, 59, 999);
+            const startISO = start.toISOString();
+            const endISO = end.toISOString();
 
-            query = query.where('travelDate', '>=', start.toISOString())
-                .where('travelDate', '<=', end.toISOString());
+            tickets = tickets.filter(ticket => {
+                const travelDate = ticket.travelDate;
+                return travelDate >= startISO && travelDate <= endISO;
+            });
         }
 
         // AGENT sees only their own tickets
         if (req.user.role === 'AGENT') {
-            query = query.where('sellerId', '==', req.user.id);
+            tickets = tickets.filter(ticket => ticket.sellerId === req.user.id);
         }
-
-        const snapshot = await query.orderBy('createdAt', 'desc').get();
-        const tickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         res.json(tickets);
     } catch (error) {
+        console.error('Tickets fetch error:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -215,23 +220,28 @@ app.delete('/api/tickets/:id', authenticateToken, async (req, res) => {
 app.get('/api/parcels', authenticateToken, async (req, res) => {
     const { date } = req.query;
     try {
-        let query = db.collection('parcels');
+        // Fetch all parcels ordered by createdAt
+        const snapshot = await db.collection('parcels').orderBy('createdAt', 'desc').get();
+        let parcels = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+        // Filter by date if provided
         if (date) {
             const start = new Date(date);
             start.setHours(0, 0, 0, 0);
             const end = new Date(date);
             end.setHours(23, 59, 59, 999);
+            const startISO = start.toISOString();
+            const endISO = end.toISOString();
 
-            query = query.where('depositDate', '>=', start.toISOString())
-                .where('depositDate', '<=', end.toISOString());
+            parcels = parcels.filter(parcel => {
+                const depositDate = parcel.depositDate;
+                return depositDate >= startISO && depositDate <= endISO;
+            });
         }
-
-        const snapshot = await query.orderBy('createdAt', 'desc').get();
-        const parcels = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         res.json(parcels);
     } catch (error) {
+        console.error('Parcels fetch error:', error);
         res.status(500).json({ error: error.message });
     }
 });
