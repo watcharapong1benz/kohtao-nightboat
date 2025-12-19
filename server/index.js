@@ -536,7 +536,8 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
 
 // Catch-all route to serve the React app for client-side routing
 // This MUST be after all API routes
-app.get('*', (req, res) => {
+// Using regex to match all non-API routes
+app.get(/^(?!\/api).*$/, (req, res) => {
     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
