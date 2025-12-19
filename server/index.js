@@ -220,7 +220,7 @@ app.delete('/api/tickets/:id', authenticateToken, async (req, res) => {
         const ticketDoc = await ticketRef.get();
 
         if (!ticketDoc.exists) {
-            return res.status(404).json({ message: 'Ticket not found' });
+            return res.status(404).json({ error: 'Ticket not found' });
         }
 
         // AGENT check ownership
@@ -234,6 +234,45 @@ app.delete('/api/tickets/:id', authenticateToken, async (req, res) => {
         await ticketRef.delete();
         res.json({ message: 'Ticket deleted' });
     } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// QR Code check-in endpoint for tickets
+app.post('/api/tickets/:id/checkin', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const ticketRef = db.collection('tickets').doc(id);
+        const ticketDoc = await ticketRef.get();
+
+        if (!ticketDoc.exists) {
+            return res.status(404).json({ error: 'ไม่พบรายการตั๋ว' });
+        }
+
+        const ticketData = ticketDoc.data();
+        if (ticketData.checkedIn) {
+            return res.status(400).json({
+                error: 'ตั๋วนี้ check-in แล้ว',
+                checkedInAt: ticketData.checkedInAt,
+                checkedInBy: ticketData.checkedInByName
+            });
+        }
+
+        await ticketRef.update({
+            checkedIn: true,
+            checkedInAt: new Date().toISOString(),
+            checkedInBy: req.user.id,
+            checkedInByName: req.user.name
+        });
+
+        res.json({
+            message: 'Check-in สำเร็จ',
+            id,
+            passengerName: ticketData.passengerName,
+            seatNumber: ticketData.seatNumber
+        });
+    } catch (error) {
+        console.error('Ticket check-in error:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -361,6 +400,39 @@ app.delete('/api/parcels/:id', authenticateToken, async (req, res) => {
         await parcelRef.delete();
         res.json({ message: 'Parcel deleted' });
     } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// QR Code scan endpoint for parcels
+app.post('/api/parcels/:id/scan', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const parcelRef = db.collection('parcels').doc(id);
+        const parcelDoc = await parcelRef.get();
+
+        if (!parcelDoc.exists) {
+            return res.status(404).json({ error: 'ไม่พบรายการพัสดุ' });
+        }
+
+        const parcelData = parcelDoc.data();
+        if (parcelData.status === 'DELIVERED') {
+            return res.status(400).json({
+                error: 'พัสดุนี้ถูกจัดส่งแล้ว',
+                deliveredAt: parcelData.deliveredAt
+            });
+        }
+
+        await parcelRef.update({
+            status: 'DELIVERED',
+            deliveredAt: new Date().toISOString(),
+            deliveredBy: req.user.id,
+            deliveredByName: req.user.name
+        });
+
+        res.json({ message: 'อัปเดตสถานะพัสดุเป็นจัดส่งแล้วสำเร็จ', id });
+    } catch (error) {
+        console.error('Parcel scan error:', error);
         res.status(500).json({ error: error.message });
     }
 });

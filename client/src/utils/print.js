@@ -1,11 +1,16 @@
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
+import QRCode from 'qrcode';
 
-export const printTicketReceipt = (ticket) => {
+export const printTicketReceipt = async (ticket) => {
     const printWindow = window.open('', '_blank');
     const routeText = ticket.route === 'SURAT_TO_KOHTAO'
         ? 'สุราษฎร์ธานี → เกาะเต่า'
         : 'เกาะเต่า → สุราษฎร์ธานี';
+
+    // Generate QR Code
+    const qrData = JSON.stringify({ type: 'ticket', id: ticket.id });
+    const qrCodeUrl = await QRCode.toDataURL(qrData, { width: 200 });
 
     const html = `
         <!DOCTYPE html>
@@ -153,6 +158,11 @@ export const printTicketReceipt = (ticket) => {
                 <span class="info-value">${ticket.seller?.name || '-'}</span>
             </div>
 
+            <div style="text-align: center; margin: 20px 0;">
+                <img src="${qrCodeUrl}" alt="QR Code" style="width: 150px; height: 150px; border: 2px solid #333; padding: 5px; background: white;" />
+                <div style="font-size: 11px; color: #666; margin-top: 8px;">แสกน QR Code เพื่อ Check-in</div>
+            </div>
+            
             <div class="barcode">
                 |||| || ||| |||| | || ||| |||| ||<br>
                 TICKET-${String(ticket.id).padStart(8, '0')}
@@ -178,8 +188,12 @@ export const printTicketReceipt = (ticket) => {
     printWindow.document.close();
 };
 
-export const printParcelReceipt = (parcel) => {
+export const printParcelReceipt = async (parcel) => {
     const printWindow = window.open('', '_blank');
+
+    // Generate QR Code
+    const qrData = JSON.stringify({ type: 'parcel', id: parcel.id });
+    const qrCodeUrl = await QRCode.toDataURL(qrData, { width: 200 });
 
     const html = `
         <!DOCTYPE html>
@@ -381,6 +395,11 @@ export const printParcelReceipt = (parcel) => {
                 <span class="info-value">${parcel.seller?.name || '-'}</span>
             </div>
 
+            <div style="text-align: center; margin: 20px 0;">
+                <img src="${qrCodeUrl}" alt="QR Code" style="width: 150px; height: 150px; border: 2px solid #333; padding: 5px; background: white;" />
+                <div style="font-size: 11px; color: #666; margin-top: 8px;">แสกน QR Code เพื่ออัปเดตสถานะ</div>
+            </div>
+            
             <div class="barcode">
                 |||| || ||| |||| | || ||| |||| ||<br>
                 PARCEL-${String(parcel.id).padStart(8, '0')}

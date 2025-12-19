@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Ticket, Package, LogOut, Ship, Wrench, Users, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Ticket, Package, LogOut, Ship, Wrench, Users, Menu, X, QrCode } from 'lucide-react';
 import clsx from 'clsx';
 
 const Layout = () => {
@@ -15,6 +15,7 @@ const Layout = () => {
         { to: '/tickets/list', icon: Ticket, label: 'รายการตั๋ว' },
         { to: '/parcels', icon: Package, label: 'รับฝากพัสดุ' },
         { to: '/parcels/list', icon: Package, label: 'รายการพัสดุ' },
+        { to: '/qr-scanner', icon: QrCode, label: 'แสกน QR Code' },
         { to: '/maintenance', icon: Wrench, label: 'แจ้งซ่อม/Maintenance' },
     ];
 

@@ -10,6 +10,7 @@ import ParcelDeposit from './pages/ParcelDeposit';
 import ParcelList from './pages/ParcelList';
 import StaffManagement from './pages/StaffManagement';
 import Maintenance from './pages/Maintenance';
+import QRScanner from './pages/QRScanner';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -39,6 +40,7 @@ const AppRoutes = () => {
         <Route path="tickets/list" element={<TicketList />} />
         <Route path="parcels" element={<ParcelDeposit />} />
         <Route path="parcels/list" element={<ParcelList />} />
+        <Route path="qr-scanner" element={<QRScanner />} />
         <Route path="maintenance" element={<Maintenance />} />
         <Route path="admin/staff" element={<StaffManagement />} />
       </Route>
