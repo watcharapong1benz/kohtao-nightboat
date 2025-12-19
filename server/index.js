@@ -456,29 +456,33 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
     const tomorrowISO = tomorrow.toISOString();
 
     try {
-        // Count tickets sold today
-        const ticketsSnapshot = await db.collection('tickets')
-            .where('createdAt', '>=', todayISO)
-            .where('createdAt', '<', tomorrowISO)
-            .get();
-        const ticketsSoldToday = ticketsSnapshot.size;
+        // Fetch all tickets and filter in memory to avoid composite index requirements
+        const allTicketsSnapshot = await db.collection('tickets').orderBy('createdAt', 'desc').get();
+        const todayTickets = allTicketsSnapshot.docs.filter(doc => {
+            const createdAt = doc.data().createdAt;
+            return createdAt >= todayISO && createdAt < tomorrowISO;
+        });
 
-        // Count parcels deposited today
-        const parcelsSnapshot = await db.collection('parcels')
-            .where('depositDate', '>=', todayISO)
-            .where('depositDate', '<', tomorrowISO)
-            .get();
-        const parcelsdepositedToday = parcelsSnapshot.size;
+        const ticketsSoldToday = todayTickets.length;
 
         // Calculate ticket revenue
         let ticketRevenue = 0;
-        ticketsSnapshot.forEach(doc => {
+        todayTickets.forEach(doc => {
             ticketRevenue += doc.data().price || 0;
         });
 
+        // Fetch all parcels and filter in memory
+        const allParcelsSnapshot = await db.collection('parcels').orderBy('createdAt', 'desc').get();
+        const todayParcels = allParcelsSnapshot.docs.filter(doc => {
+            const depositDate = doc.data().depositDate;
+            return depositDate >= todayISO && depositDate < tomorrowISO;
+        });
+
+        const parcelsdepositedToday = todayParcels.length;
+
         // Calculate parcel revenue
         let parcelRevenue = 0;
-        parcelsSnapshot.forEach(doc => {
+        todayParcels.forEach(doc => {
             parcelRevenue += doc.data().price || 0;
         });
 
@@ -490,27 +494,15 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
             .get();
         const parcelsWaiting = parcelsWaitingSnapshot.size;
 
-        // Get recent tickets (limit 5)
-        const recentTicketsSnapshot = await db.collection('tickets')
-            .where('createdAt', '>=', todayISO)
-            .where('createdAt', '<', tomorrowISO)
-            .orderBy('createdAt', 'desc')
-            .limit(5)
-            .get();
-        const recentTickets = recentTicketsSnapshot.docs.map(doc => ({
+        // Get recent tickets (limit 5) - already sorted by createdAt desc
+        const recentTickets = todayTickets.slice(0, 5).map(doc => ({
             id: doc.id,
             ...doc.data(),
             seller: { name: doc.data().sellerName }
         }));
 
-        // Get recent parcels (limit 5)
-        const recentParcelsSnapshot = await db.collection('parcels')
-            .where('depositDate', '>=', todayISO)
-            .where('depositDate', '<', tomorrowISO)
-            .orderBy('createdAt', 'desc')
-            .limit(5)
-            .get();
-        const recentParcels = recentParcelsSnapshot.docs.map(doc => ({
+        // Get recent parcels (limit 5) - already sorted by createdAt desc
+        const recentParcels = todayParcels.slice(0, 5).map(doc => ({
             id: doc.id,
             ...doc.data(),
             seller: { name: doc.data().sellerName }
@@ -526,6 +518,7 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
         });
 
     } catch (error) {
+        console.error('Dashboard error:', error);
         res.status(500).json({ error: error.message });
     }
 });
