@@ -534,11 +534,13 @@ app.get('/api/dashboard', authenticateToken, async (req, res) => {
 });
 
 
-// Catch-all route to serve the React app
-// app.get('*', (req, res) => {
-//     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-// });
+// Catch-all route to serve the React app for client-side routing
+// This MUST be after all API routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
