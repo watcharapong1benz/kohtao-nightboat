@@ -67,35 +67,35 @@ const TicketSales = () => {
     };
 
     return (
-        <div className="flex gap-8 h-full">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 h-full">
             {/* Left: Seat Map */}
             <div className="flex-1 card overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-bold flex items-center gap-2">
-                        <Anchor className="text-blue-500" />
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 lg:mb-6 gap-3">
+                    <h3 className="text-base lg:text-lg font-bold flex items-center gap-2">
+                        <Anchor className="text-blue-500" size={20} />
                         เลือกเตียง ({layoutType === 'LAYOUT_50' ? '50 ที่นั่ง' : '30 ที่นั่ง'})
                     </h3>
                     <div className="flex gap-2">
                         <button
                             onClick={() => setLayoutType('LAYOUT_50')}
-                            className={clsx("px-3 py-1 rounded text-sm", layoutType === 'LAYOUT_50' ? "bg-blue-600 text-white" : "bg-slate-200")}
+                            className={clsx("px-3 py-1.5 rounded text-xs lg:text-sm font-medium transition-colors", layoutType === 'LAYOUT_50' ? "bg-blue-600 text-white" : "bg-slate-200 hover:bg-slate-300")}
                         >เตียงเดียว</button>
                         <button
                             onClick={() => setLayoutType('LAYOUT_30')}
-                            className={clsx("px-3 py-1 rounded text-sm", layoutType === 'LAYOUT_30' ? "bg-blue-600 text-white" : "bg-slate-200")}
+                            className={clsx("px-3 py-1.5 rounded text-xs lg:text-sm font-medium transition-colors", layoutType === 'LAYOUT_30' ? "bg-blue-600 text-white" : "bg-slate-200 hover:bg-slate-300")}
                         >เตียงคู่</button>
                     </div>
                 </div>
 
                 {/* Legend */}
-                <div className="flex gap-4 mb-8 text-sm justify-center">
+                <div className="flex flex-wrap gap-3 lg:gap-4 mb-6 lg:mb-8 text-xs lg:text-sm justify-center">
                     <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-slate-200 border border-slate-300"></div> ว่าง</div>
                     <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-blue-500 border border-blue-600"></div> เลือก</div>
                     <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-red-200 border border-red-300 opacity-50"></div> ขายแล้ว</div>
                 </div>
 
-                {/* Grid */}
-                <div className="grid grid-cols-5 gap-3 max-w-lg mx-auto p-4 bg-slate-50 rounded-xl border border-slate-200">
+                {/* Grid - Responsive columns */}
+                <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-5 gap-2 lg:gap-3 max-w-lg mx-auto p-3 lg:p-4 bg-slate-50 rounded-xl border border-slate-200">
                     {currentSeats.map(seat => {
                         const isBooked = bookedSeats.includes(seat);
                         const isSelected = selectedSeat === seat;
@@ -105,7 +105,7 @@ const TicketSales = () => {
                                 disabled={isBooked}
                                 onClick={() => setSelectedSeat(seat)}
                                 className={clsx(
-                                    "h-12 rounded-lg font-medium text-sm transition-all relative group",
+                                    "h-10 lg:h-12 rounded-lg font-medium text-xs lg:text-sm transition-all relative group",
                                     isBooked
                                         ? "bg-red-100 text-red-400 cursor-not-allowed border border-red-200"
                                         : isSelected
@@ -122,18 +122,18 @@ const TicketSales = () => {
             </div>
 
             {/* Right: Booking Form */}
-            <div className="w-96">
-                <div className="card h-auto sticky top-4">
-                    <h3 className="font-bold text-lg mb-4 border-b pb-4">รายละเอียดตั๋ว</h3>
-                    <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="w-full lg:w-96">
+                <div className="card h-auto lg:sticky lg:top-4">
+                    <h3 className="font-bold text-base lg:text-lg mb-4 border-b pb-3 lg:pb-4">รายละเอียดตั๋ว</h3>
+                    <form onSubmit={handleSubmit} className="space-y-3 lg:space-y-4">
 
                         <div className="space-y-1">
-                            <label className="text-sm font-medium text-slate-600">วันที่เดินทาง</label>
+                            <label className="text-xs lg:text-sm font-medium text-slate-600">วันที่เดินทาง</label>
                             <div className="relative">
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                 <input
                                     type="date"
-                                    className="input-field pl-10"
+                                    className="input-field pl-10 text-sm lg:text-base"
                                     value={date}
                                     onChange={(e) => setDate(e.target.value)}
                                     required
@@ -142,9 +142,9 @@ const TicketSales = () => {
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-sm font-medium text-slate-600">เส้นทาง</label>
+                            <label className="text-xs lg:text-sm font-medium text-slate-600">เส้นทาง</label>
                             <select
-                                className="input-field"
+                                className="input-field text-sm lg:text-base"
                                 value={route}
                                 onChange={(e) => setRoute(e.target.value)}
                             >
@@ -153,21 +153,20 @@ const TicketSales = () => {
                             </select>
                         </div>
 
-                        <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100">
+                        <div className="p-3 lg:p-4 bg-blue-50/50 rounded-lg border border-blue-100">
                             <div className="flex justify-between items-center mb-2">
-                                <span className="text-sm text-slate-500">ที่นั่งที่เลือก</span>
-                                <span className="text-xl font-bold text-blue-600">{selectedSeat || '-'}</span>
+                                <span className="text-xs lg:text-sm text-slate-500">ที่นั่งที่เลือก</span>
+                                <span className="text-lg lg:text-xl font-bold text-blue-600">{selectedSeat || '-'}</span>
                             </div>
-                            {/* Price calculation if needed */}
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-sm font-medium text-slate-600">ชื่อผู้โดยสาร</label>
+                            <label className="text-xs lg:text-sm font-medium text-slate-600">ชื่อผู้โดยสาร</label>
                             <div className="relative">
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                 <input
                                     type="text"
-                                    className="input-field pl-10"
+                                    className="input-field pl-10 text-sm lg:text-base"
                                     placeholder="ระบุชื่อ-นามสกุล"
                                     value={formData.passengerName}
                                     onChange={e => setFormData({ ...formData, passengerName: e.target.value })}
@@ -177,12 +176,12 @@ const TicketSales = () => {
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-sm font-medium text-slate-600">เบอร์โทรศัพท์</label>
+                            <label className="text-xs lg:text-sm font-medium text-slate-600">เบอร์โทรศัพท์</label>
                             <div className="relative">
                                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                 <input
                                     type="tel"
-                                    className="input-field pl-10"
+                                    className="input-field pl-10 text-sm lg:text-base"
                                     placeholder="08x-xxx-xxxx"
                                     value={formData.phone}
                                     onChange={e => setFormData({ ...formData, phone: e.target.value })}
@@ -192,10 +191,10 @@ const TicketSales = () => {
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-sm font-medium text-slate-600">ราคาตั๋ว (บาท)</label>
+                            <label className="text-xs lg:text-sm font-medium text-slate-600">ราคาตั๋ว (บาท)</label>
                             <input
                                 type="number"
-                                className="input-field font-bold text-right"
+                                className="input-field font-bold text-right text-sm lg:text-base"
                                 value={formData.price}
                                 onChange={e => setFormData({ ...formData, price: e.target.value })}
                                 required
@@ -204,7 +203,7 @@ const TicketSales = () => {
 
                         <button
                             type="submit"
-                            className="w-full btn-primary py-3 mt-4 flex items-center justify-center gap-2"
+                            className="w-full btn-primary py-2.5 lg:py-3 mt-4 flex items-center justify-center gap-2 text-sm lg:text-base"
                             disabled={!selectedSeat}
                         >
                             <Ticket size={20} />

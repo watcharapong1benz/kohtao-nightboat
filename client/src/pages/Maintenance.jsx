@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { format } from 'date-fns';
-import { Plus, Wrench, CheckCircle, Clock } from 'lucide-react';
+import { Plus, Wrench, CheckCircle, Clock, Upload, X } from 'lucide-react';
 import clsx from 'clsx';
 
 const Maintenance = () => {
     const [records, setRecords] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
     const [formData, setFormData] = useState({
         date: format(new Date(), 'yyyy-MM-dd'),
         details: '',
@@ -28,6 +29,36 @@ const Maintenance = () => {
         } catch (error) {
             console.error(error);
         }
+    };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('ไฟล์รูปภาพต้องมีขนาดไม่เกิน 5MB');
+            return;
+        }
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('กรุณาเลือกไฟล์รูปภาพเท่านั้น');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64String = reader.result;
+            setFormData({ ...formData, imageUrl: base64String });
+            setImagePreview(base64String);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const removeImage = () => {
+        setFormData({ ...formData, imageUrl: '' });
+        setImagePreview(null);
     };
 
     const handleSubmit = async (e) => {
@@ -56,6 +87,7 @@ const Maintenance = () => {
                 repairDate: record.repairDate ? format(new Date(record.repairDate), 'yyyy-MM-dd') : '',
                 technician: record.technician || ''
             });
+            setImagePreview(record.imageUrl || null);
         } else {
             setEditingId(null);
             setFormData({
@@ -66,6 +98,7 @@ const Maintenance = () => {
                 repairDate: '',
                 technician: ''
             });
+            setImagePreview(null);
         }
         setIsModalOpen(true);
     };
@@ -73,24 +106,25 @@ const Maintenance = () => {
     const closeModal = () => {
         setIsModalOpen(false);
         setEditingId(null);
+        setImagePreview(null);
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold flex items-center gap-2">
-                    <Wrench className="text-orange-500" />
+        <div className="space-y-4 lg:space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <h2 className="text-lg lg:text-xl font-bold flex items-center gap-2">
+                    <Wrench className="text-orange-500" size={20} />
                     บันทึกการซ่อมบำรุง (Maintenance Log)
                 </h2>
                 <button
                     onClick={() => openModal()}
-                    className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                    className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm lg:text-base"
                 >
                     <Plus size={18} /> บันทึกรายการซ่อม
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {records.map(record => (
                     <div key={record.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
                         {record.imageUrl && (
@@ -116,9 +150,9 @@ const Maintenance = () => {
                                 </div>
                             )}
 
-                            <h3 className="font-medium text-slate-800 line-clamp-2">{record.details}</h3>
+                            <h3 className="font-medium text-slate-800 line-clamp-2 text-sm lg:text-base">{record.details}</h3>
 
-                            <div className="text-sm text-slate-500 space-y-1">
+                            <div className="text-xs lg:text-sm text-slate-500 space-y-1">
                                 <div className="flex items-center gap-2">
                                     <Clock size={14} />
                                     <span>แจ้งเมื่อ: {format(new Date(record.date), 'dd/MM/yyyy')}</span>
@@ -139,7 +173,7 @@ const Maintenance = () => {
 
                             <button
                                 onClick={() => openModal(record)}
-                                className="w-full mt-2 py-2 text-sm text-slate-600 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200"
+                                className="w-full mt-2 py-2 text-xs lg:text-sm text-slate-600 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 transition-colors"
                             >
                                 แก้ไข / อัปเดตสถานะ
                             </button>
@@ -151,19 +185,19 @@ const Maintenance = () => {
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
-                        <div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
-                            <h3 className="font-bold text-lg">{editingId ? 'แก้ไขรายการ' : 'บันทึกรายการใหม่'}</h3>
-                            <button onClick={closeModal} className="text-slate-400 hover:text-slate-600">✕</button>
+                        <div className="px-4 lg:px-6 py-3 lg:py-4 border-b flex justify-between items-center bg-slate-50 sticky top-0 z-10">
+                            <h3 className="font-bold text-base lg:text-lg">{editingId ? 'แก้ไขรายการ' : 'บันทึกรายการใหม่'}</h3>
+                            <button onClick={closeModal} className="text-slate-400 hover:text-slate-600 text-xl">✕</button>
                         </div>
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                        <form onSubmit={handleSubmit} className="p-4 lg:p-6 space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="label text-sm text-slate-600 mb-1 block">วันที่แจ้ง</label>
-                                    <input required type="date" className="input-field w-full p-2 border rounded" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} />
+                                    <label className="label text-xs lg:text-sm text-slate-600 mb-1 block">วันที่แจ้ง</label>
+                                    <input required type="date" className="input-field w-full text-sm lg:text-base" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="label text-sm text-slate-600 mb-1 block">สถานะ</label>
-                                    <select className="input-field w-full p-2 border rounded" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
+                                    <label className="label text-xs lg:text-sm text-slate-600 mb-1 block">สถานะ</label>
+                                    <select className="input-field w-full text-sm lg:text-base" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                                         <option value="WAITING">รอซ่อม</option>
                                         <option value="REPAIRED">ซ่อมแล้ว</option>
                                     </select>
@@ -171,31 +205,56 @@ const Maintenance = () => {
                             </div>
 
                             <div>
-                                <label className="label text-sm text-slate-600 mb-1 block">รายละเอียดอาการเสีย</label>
-                                <textarea required rows="3" className="input-field w-full p-2 border rounded" value={formData.details} onChange={e => setFormData({ ...formData, details: e.target.value })}></textarea>
+                                <label className="label text-xs lg:text-sm text-slate-600 mb-1 block">รายละเอียดอาการเสีย</label>
+                                <textarea required rows="3" className="input-field w-full text-sm lg:text-base" value={formData.details} onChange={e => setFormData({ ...formData, details: e.target.value })}></textarea>
                             </div>
 
                             <div>
-                                <label className="label text-sm text-slate-600 mb-1 block">รูปภาพ (URL)</label>
-                                <input type="url" placeholder="https:// example.com/image.jpg" className="input-field w-full p-2 border rounded" value={formData.imageUrl} onChange={e => setFormData({ ...formData, imageUrl: e.target.value })} />
-                                <p className="text-xs text-slate-400 mt-1">วางลิงก์รูปภาพจากเว็บ หรือฝากรูปไว้ที่อื่น</p>
+                                <label className="label text-xs lg:text-sm text-slate-600 mb-1 block">รูปภาพ</label>
+                                {imagePreview ? (
+                                    <div className="relative">
+                                        <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-lg border border-slate-200" />
+                                        <button
+                                            type="button"
+                                            onClick={removeImage}
+                                            className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-orange-400 transition-colors cursor-pointer">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
+                                            className="hidden"
+                                            id="image-upload"
+                                        />
+                                        <label htmlFor="image-upload" className="cursor-pointer">
+                                            <Upload className="mx-auto text-slate-400 mb-2" size={32} />
+                                            <p className="text-sm text-slate-600 font-medium">คลิกเพื่ออัพโหลดรูปภาพ</p>
+                                            <p className="text-xs text-slate-400 mt-1">รองรับไฟล์ JPG, PNG (สูงสุด 5MB)</p>
+                                        </label>
+                                    </div>
+                                )}
                             </div>
 
-                            <div className="border-t pt-4 mt-4 bg-slate-50 p-4 rounded-lg">
-                                <h4 className="font-medium text-slate-700 mb-2">ส่วนของการซ่อม (เมื่อซ่อมเสร็จ)</h4>
-                                <div className="grid grid-cols-2 gap-4">
+                            <div className="border-t pt-4 mt-4 bg-slate-50 p-3 lg:p-4 rounded-lg">
+                                <h4 className="font-medium text-slate-700 mb-3 text-sm lg:text-base">ส่วนของการซ่อม (เมื่อซ่อมเสร็จ)</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="label text-sm text-slate-600 mb-1 block">วันที่ซ่อมเสร็จ</label>
-                                        <input type="date" className="input-field w-full p-2 border rounded" value={formData.repairDate} onChange={e => setFormData({ ...formData, repairDate: e.target.value })} />
+                                        <label className="label text-xs lg:text-sm text-slate-600 mb-1 block">วันที่ซ่อมเสร็จ</label>
+                                        <input type="date" className="input-field w-full text-sm lg:text-base" value={formData.repairDate} onChange={e => setFormData({ ...formData, repairDate: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="label text-sm text-slate-600 mb-1 block">ช่างที่ซ่อม</label>
-                                        <input type="text" className="input-field w-full p-2 border rounded" value={formData.technician} onChange={e => setFormData({ ...formData, technician: e.target.value })} />
+                                        <label className="label text-xs lg:text-sm text-slate-600 mb-1 block">ช่างที่ซ่อม</label>
+                                        <input type="text" placeholder="ชื่อช่าง" className="input-field w-full text-sm lg:text-base" value={formData.technician} onChange={e => setFormData({ ...formData, technician: e.target.value })} />
                                     </div>
                                 </div>
                             </div>
 
-                            <button type="submit" className="w-full bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium mt-4">บันทึกข้อมูล</button>
+                            <button type="submit" className="w-full bg-orange-600 text-white py-2.5 rounded-lg hover:bg-orange-700 transition-colors font-medium mt-4 text-sm lg:text-base">บันทึกข้อมูล</button>
                         </form>
                     </div>
                 </div>
