@@ -110,7 +110,30 @@ app.get('/api/tickets', authenticateToken, async (req, res) => {
             tickets = tickets.filter(ticket => ticket.sellerId === req.user.id);
         }
 
-        res.json(tickets);
+        // Populate seller information
+        const ticketsWithSeller = await Promise.all(tickets.map(async (ticket) => {
+            if (ticket.sellerId) {
+                try {
+                    const sellerDoc = await db.collection('users').doc(ticket.sellerId).get();
+                    if (sellerDoc.exists) {
+                        const sellerData = sellerDoc.data();
+                        return {
+                            ...ticket,
+                            seller: {
+                                id: sellerDoc.id,
+                                name: sellerData.name,
+                                username: sellerData.username
+                            }
+                        };
+                    }
+                } catch (error) {
+                    console.error('Error fetching seller:', error);
+                }
+            }
+            return ticket;
+        }));
+
+        res.json(ticketsWithSeller);
     } catch (error) {
         console.error('Tickets fetch error:', error);
         res.status(500).json({ error: error.message });
@@ -239,7 +262,30 @@ app.get('/api/parcels', authenticateToken, async (req, res) => {
             });
         }
 
-        res.json(parcels);
+        // Populate seller information
+        const parcelsWithSeller = await Promise.all(parcels.map(async (parcel) => {
+            if (parcel.sellerId) {
+                try {
+                    const sellerDoc = await db.collection('users').doc(parcel.sellerId).get();
+                    if (sellerDoc.exists) {
+                        const sellerData = sellerDoc.data();
+                        return {
+                            ...parcel,
+                            seller: {
+                                id: sellerDoc.id,
+                                name: sellerData.name,
+                                username: sellerData.username
+                            }
+                        };
+                    }
+                } catch (error) {
+                    console.error('Error fetching seller:', error);
+                }
+            }
+            return parcel;
+        }));
+
+        res.json(parcelsWithSeller);
     } catch (error) {
         console.error('Parcels fetch error:', error);
         res.status(500).json({ error: error.message });
