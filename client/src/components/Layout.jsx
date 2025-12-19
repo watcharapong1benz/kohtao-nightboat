@@ -16,6 +16,7 @@ const Layout = () => {
         { to: '/parcels', icon: Package, label: 'รับฝากพัสดุ' },
         { to: '/parcels/list', icon: Package, label: 'รายการพัสดุ' },
         { to: '/qr-scanner', icon: QrCode, label: 'แสกน QR Code' },
+        { to: '/checkin-status', icon: Users, label: 'สถานะ Check-in' },
         { to: '/maintenance', icon: Wrench, label: 'แจ้งซ่อม/Maintenance' },
     ];
 
