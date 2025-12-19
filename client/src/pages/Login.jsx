@@ -19,7 +19,7 @@ const Login = () => {
 
         try {
             console.log('Attempting login with:', { username, password: '***' });
-            const res = await api.post('/login', {
+            const res = await api.post('/api/login', {
                 username,
                 password
             });
