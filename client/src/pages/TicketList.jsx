@@ -91,101 +91,111 @@ const TicketList = () => {
     });
 
     return (
-        <div className="space-y-6 relative">
+        <div className="space-y-4 lg:space-y-6 relative">
             {/* Feedback Message Toast */}
             {message && (
                 <div className={clsx(
-                    "fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-medium z-50 animate-bounce transition-all",
+                    "fixed bottom-4 right-4 px-4 lg:px-6 py-2 lg:py-3 rounded-lg shadow-lg text-white font-medium z-50 animate-bounce transition-all text-sm lg:text-base",
                     message.type === 'success' ? "bg-green-600" : "bg-red-600"
                 )}>
                     {message.text}
                 </div>
             )}
 
-            <div className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                    <h2 className="text-xl font-bold">รายการตั๋วเรือ</h2>
-                    <div className="flex gap-2">
+            {/* Filters - Responsive */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 lg:gap-4">
+                <h2 className="text-lg lg:text-xl font-bold">รายการตั๋วเรือ</h2>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:gap-4 w-full sm:w-auto">
+                    <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="input-field w-full sm:w-auto text-sm lg:text-base"
+                    />
+                    <div className="relative w-full sm:w-auto">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <input
-                            type="date"
-                            value={date}
-                            onChange={(e) => setDate(e.target.value)}
-                            className="input-field w-auto"
+                            type="text"
+                            placeholder="ค้นหาพนง.ขาย/ผู้โดยสาร..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="input-field w-full sm:w-48 lg:w-64 pl-10 text-sm lg:text-base"
                         />
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                            <input
-                                type="text"
-                                placeholder="ค้นหาพนง.ขาย/ผู้โดยสาร..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="input-field w-64 pl-10"
-                            />
-                        </div>
                     </div>
                 </div>
             </div>
 
+            {/* Table - Responsive with horizontal scroll */}
             <div className="card overflow-hidden p-0">
-                <table className="w-full text-left border-collapse">
-                    <thead className="bg-slate-50 text-slate-500 text-sm uppercas border-b border-slate-200">
-                        <tr>
-                            <th className="p-4 font-medium">เวลาขาย</th>
-                            <th className="p-4 font-medium">ผู้โดยสาร</th>
-                            <th className="p-4 font-medium">โทรศัพท์</th>
-                            <th className="p-4 font-medium">เส้นทาง</th>
-                            <th className="p-4 font-medium">ที่นั่ง</th>
-                            <th className="p-4 font-medium text-right">ราคา</th>
-                            <th className="p-4 font-medium">พนักงานขาย</th>
-                            <th className="p-4 font-medium text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {filteredTickets.length === 0 ? (
-                            <tr><td colSpan="8" className="p-8 text-center text-slate-400">ไม่รายการขายในช่วงเวลานี้</td></tr>
-                        ) : filteredTickets.map(ticket => (
-                            <tr key={ticket.id} className="hover:bg-slate-50 transition-colors">
-                                <td className="p-4 text-slate-600">
-                                    {format(new Date(ticket.createdAt), 'HH:mm')}
-                                </td>
-                                <td className="p-4 font-medium">{ticket.passengerName}</td>
-                                <td className="p-4 text-slate-600">{ticket.phone}</td>
-                                <td className="p-4 text-sm">
-                                    <span className={ticket.route === 'SURAT_TO_KOHTAO' ? 'text-blue-600' : 'text-orange-600'}>
-                                        {ticket.route === 'SURAT_TO_KOHTAO' ? 'สุราษฎร์ -> เกาะเต่า' : 'เกาะเต่า -> สุราษฎร์'}
-                                    </span>
-                                </td>
-                                <td className="p-4 font-mono text-slate-700">{ticket.seatNumber}</td>
-                                <td className="p-4 text-right font-medium">{ticket.price}</td>
-                                <td className="p-4 text-sm text-slate-500">{ticket.seller?.name || '-'}</td>
-                                <td className="p-4 flex justify-center gap-2">
-                                    <button onClick={() => handlePrint(ticket)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="พิมพ์ใบเสร็จ"><Printer size={16} /></button>
-                                    <button onClick={() => handleEditClick(ticket)} className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded" title="แก้ไข"><Edit2 size={16} /></button>
-                                    {user?.role !== 'STAFF' && (
-                                        <button onClick={() => handleDelete(ticket.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded" title="ลบ"><Trash2 size={16} /></button>
-                                    )}
-                                </td>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse min-w-[800px]">
+                        <thead className="bg-slate-50 text-slate-500 text-xs lg:text-sm uppercase border-b border-slate-200">
+                            <tr>
+                                <th className="p-2 lg:p-4 font-medium">เวลาขาย</th>
+                                <th className="p-2 lg:p-4 font-medium">ผู้โดยสาร</th>
+                                <th className="p-2 lg:p-4 font-medium hidden md:table-cell">โทรศัพท์</th>
+                                <th className="p-2 lg:p-4 font-medium">เส้นทาง</th>
+                                <th className="p-2 lg:p-4 font-medium">ที่นั่ง</th>
+                                <th className="p-2 lg:p-4 font-medium text-right">ราคา</th>
+                                <th className="p-2 lg:p-4 font-medium">พนักงานขาย</th>
+                                <th className="p-2 lg:p-4 font-medium text-center sticky right-0 bg-slate-50">Action</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {filteredTickets.length === 0 ? (
+                                <tr><td colSpan="8" className="p-6 lg:p-8 text-center text-slate-400 text-sm">ไม่มีรายการขายในช่วงเวลานี้</td></tr>
+                            ) : filteredTickets.map(ticket => (
+                                <tr key={ticket.id} className="hover:bg-slate-50 transition-colors">
+                                    <td className="p-2 lg:p-4 text-slate-600 text-xs lg:text-sm">
+                                        {format(new Date(ticket.createdAt), 'HH:mm')}
+                                    </td>
+                                    <td className="p-2 lg:p-4 font-medium text-xs lg:text-sm">{ticket.passengerName}</td>
+                                    <td className="p-2 lg:p-4 text-slate-600 text-xs lg:text-sm hidden md:table-cell">{ticket.phone}</td>
+                                    <td className="p-2 lg:p-4 text-xs lg:text-sm">
+                                        <span className={ticket.route === 'SURAT_TO_KOHTAO' ? 'text-blue-600' : 'text-orange-600'}>
+                                            {ticket.route === 'SURAT_TO_KOHTAO' ? 'สุราษฎร์ → เกาะเต่า' : 'เกาะเต่า → สุราษฎร์'}
+                                        </span>
+                                    </td>
+                                    <td className="p-2 lg:p-4 font-mono text-slate-700 text-xs lg:text-sm">{ticket.seatNumber}</td>
+                                    <td className="p-2 lg:p-4 text-right font-medium text-xs lg:text-sm">{ticket.price}</td>
+                                    <td className="p-2 lg:p-4 text-xs lg:text-sm text-slate-500">{ticket.seller?.name || '-'}</td>
+                                    <td className="p-2 lg:p-4 sticky right-0 bg-white">
+                                        <div className="flex justify-center gap-1 lg:gap-2">
+                                            <button onClick={() => handlePrint(ticket)} className="p-1.5 lg:p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="พิมพ์ใบเสร็จ">
+                                                <Printer size={16} className="lg:w-4 lg:h-4" />
+                                            </button>
+                                            <button onClick={() => handleEditClick(ticket)} className="p-1.5 lg:p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors" title="แก้ไข">
+                                                <Edit2 size={16} className="lg:w-4 lg:h-4" />
+                                            </button>
+                                            {user?.role !== 'STAFF' && (
+                                                <button onClick={() => handleDelete(ticket.id)} className="p-1.5 lg:p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="ลบ">
+                                                    <Trash2 size={16} className="lg:w-4 lg:h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            {/* Edit Modal */}
+            {/* Edit Modal - Responsive */}
             {editingTicket && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-                        <div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
-                            <h3 className="font-bold text-lg">แก้ไขข้อมูลตั๋ว</h3>
-                            <button onClick={() => setEditingTicket(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+                        <div className="px-4 lg:px-6 py-3 lg:py-4 border-b flex justify-between items-center bg-slate-50">
+                            <h3 className="font-bold text-base lg:text-lg">แก้ไขข้อมูลตั๋ว</h3>
+                            <button onClick={() => setEditingTicket(null)} className="text-slate-400 hover:text-slate-600 text-xl">✕</button>
                         </div>
-                        <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
+                        <form onSubmit={handleEditSubmit} className="p-4 lg:p-6 space-y-4">
                             <div>
                                 <label className="label text-sm text-slate-600 mb-1 block">ชื่อผู้โดยสาร</label>
                                 <input
                                     required
                                     type="text"
-                                    className="input-field"
+                                    className="input-field text-sm lg:text-base"
                                     value={editForm.passengerName}
                                     onChange={e => setEditForm({ ...editForm, passengerName: e.target.value })}
                                 />
@@ -195,7 +205,7 @@ const TicketList = () => {
                                 <input
                                     required
                                     type="tel"
-                                    className="input-field"
+                                    className="input-field text-sm lg:text-base"
                                     value={editForm.phone}
                                     onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
                                 />
@@ -205,15 +215,15 @@ const TicketList = () => {
                                 <input
                                     required
                                     type="number"
-                                    className="input-field"
+                                    className="input-field text-sm lg:text-base"
                                     value={editForm.price}
                                     onChange={e => setEditForm({ ...editForm, price: e.target.value })}
                                 />
                             </div>
 
                             <div className="flex gap-3 pt-4 border-t mt-4">
-                                <button type="button" onClick={() => setEditingTicket(null)} className="flex-1 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 transition-colors">ยกเลิก</button>
-                                <button type="submit" className="flex-1 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium">บันทึกแก้ไข</button>
+                                <button type="button" onClick={() => setEditingTicket(null)} className="flex-1 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 transition-colors text-sm lg:text-base">ยกเลิก</button>
+                                <button type="submit" className="flex-1 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium text-sm lg:text-base">บันทึกแก้ไข</button>
                             </div>
                         </form>
                     </div>

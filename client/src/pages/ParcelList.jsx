@@ -120,101 +120,111 @@ const ParcelList = () => {
     });
 
     return (
-        <div className="space-y-6 relative">
+        <div className="space-y-4 lg:space-y-6 relative">
             {/* Feedback Message Toast */}
             {message && (
                 <div className={clsx(
-                    "fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-medium z-50 animate-bounce transition-all",
+                    "fixed bottom-4 right-4 px-4 lg:px-6 py-2 lg:py-3 rounded-lg shadow-lg text-white font-medium z-50 animate-bounce transition-all text-sm lg:text-base",
                     message.type === 'success' ? "bg-green-600" : "bg-red-600"
                 )}>
                     {message.text}
                 </div>
             )}
 
-            <div className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                    <h2 className="text-xl font-bold">รายการพัสดุฝากส่ง</h2>
-                    <div className="flex gap-2">
+            {/* Filters - Responsive */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 lg:gap-4">
+                <h2 className="text-lg lg:text-xl font-bold">รายการพัสดุฝากส่ง</h2>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:gap-4 w-full sm:w-auto">
+                    <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="input-field w-full sm:w-auto text-sm lg:text-base"
+                    />
+                    <div className="relative w-full sm:w-auto">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <input
-                            type="date"
-                            value={date}
-                            onChange={(e) => setDate(e.target.value)}
-                            className="input-field w-auto"
+                            type="text"
+                            placeholder="ค้นหาพนง.รับฝาก/ลูกค้า..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="input-field w-full sm:w-48 lg:w-64 pl-10 text-sm lg:text-base"
                         />
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                            <input
-                                type="text"
-                                placeholder="ค้นหาพนง.รับฝาก/ลูกค้า..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="input-field w-64 pl-10"
-                            />
-                        </div>
                     </div>
                 </div>
             </div>
 
+            {/* Table - Responsive with horizontal scroll */}
             <div className="card overflow-hidden p-0">
-                <table className="w-full text-left border-collapse">
-                    <thead className="bg-slate-50 text-slate-500 text-sm uppercas border-b border-slate-200">
-                        <tr>
-                            <th className="p-4 font-medium">ผู้ส่ง</th>
-                            <th className="p-4 font-medium">ผู้รับ</th>
-                            <th className="p-4 font-medium">น้ำหนัก (Kg)</th>
-                            <th className="p-4 font-medium text-right">ราคา</th>
-                            <th className="p-4 font-medium text-center">ชำระเงิน</th>
-                            <th className="p-4 font-medium text-center">สถานะ</th>
-                            <th className="p-4 font-medium">พนง.รับฝาก</th>
-                            <th className="p-4 font-medium text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {filteredParcels.length === 0 ? (
-                            <tr><td colSpan="8" className="p-8 text-center text-slate-400">ไม่มีรายการพัสดุในช่วงเวลานี้</td></tr>
-                        ) : filteredParcels.map(parcel => (
-                            <tr key={parcel.id} className="hover:bg-slate-50 transition-colors">
-                                <td className="p-4">
-                                    <div className="font-medium">{parcel.senderName}</div>
-                                    <div className="text-xs text-slate-400">{parcel.senderPhone}</div>
-                                </td>
-                                <td className="p-4">
-                                    <div className="font-medium">{parcel.receiverName}</div>
-                                    <div className="text-xs text-slate-400">{parcel.receiverPhone}</div>
-                                </td>
-                                <td className="p-4 text-slate-600">{parcel.weight}</td>
-                                <td className="p-4 text-right font-medium">{parcel.price}</td>
-                                <td className="p-4 text-center">
-                                    <span className={clsx("px-2 py-1 rounded text-xs font-bold", parcel.paymentStatus === 'PAID' ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600")}>
-                                        {parcel.paymentStatus}
-                                    </span>
-                                </td>
-                                <td className="p-4 text-center">
-                                    <button
-                                        onClick={() => handleStatusChange(parcel.id, parcel.status)}
-                                        className={clsx(
-                                            "flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-all mx-auto",
-                                            parcel.status === 'DELIVERED'
-                                                ? "bg-green-500 text-white shadow-green-200 shadow-lg"
-                                                : "bg-amber-100 text-amber-600 hover:bg-amber-200"
-                                        )}
-                                    >
-                                        {parcel.status === 'DELIVERED' ? <CheckCircle size={12} /> : <Clock size={12} />}
-                                        {parcel.status === 'DELIVERED' ? 'จัดส่งแล้ว' : 'รอส่ง'}
-                                    </button>
-                                </td>
-                                <td className="p-4 text-sm text-slate-500">{parcel.seller?.name || '-'}</td>
-                                <td className="p-4 flex justify-center gap-2">
-                                    <button onClick={() => handlePrint(parcel)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="พิมพ์ใบเสร็จ"><Printer size={16} /></button>
-                                    <button onClick={() => handleEditClick(parcel)} className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded" title="แก้ไข"><Edit2 size={16} /></button>
-                                    {user?.role !== 'STAFF' && (
-                                        <button onClick={() => handleDelete(parcel.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded" title="ลบ"><Trash2 size={16} /></button>
-                                    )}
-                                </td>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse min-w-[900px]">
+                        <thead className="bg-slate-50 text-slate-500 text-xs lg:text-sm uppercase border-b border-slate-200">
+                            <tr>
+                                <th className="p-2 lg:p-4 font-medium">ผู้ส่ง</th>
+                                <th className="p-2 lg:p-4 font-medium">ผู้รับ</th>
+                                <th className="p-2 lg:p-4 font-medium hidden md:table-cell">น้ำหนัก (Kg)</th>
+                                <th className="p-2 lg:p-4 font-medium text-right">ราคา</th>
+                                <th className="p-2 lg:p-4 font-medium text-center">ชำระเงิน</th>
+                                <th className="p-2 lg:p-4 font-medium text-center">สถานะ</th>
+                                <th className="p-2 lg:p-4 font-medium">พนง.รับฝาก</th>
+                                <th className="p-2 lg:p-4 font-medium text-center sticky right-0 bg-slate-50">Action</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {filteredParcels.length === 0 ? (
+                                <tr><td colSpan="8" className="p-6 lg:p-8 text-center text-slate-400 text-sm">ไม่มีรายการพัสดุในช่วงเวลานี้</td></tr>
+                            ) : filteredParcels.map(parcel => (
+                                <tr key={parcel.id} className="hover:bg-slate-50 transition-colors">
+                                    <td className="p-2 lg:p-4">
+                                        <div className="font-medium text-xs lg:text-sm">{parcel.senderName}</div>
+                                        <div className="text-xs text-slate-400">{parcel.senderPhone}</div>
+                                    </td>
+                                    <td className="p-2 lg:p-4">
+                                        <div className="font-medium text-xs lg:text-sm">{parcel.receiverName}</div>
+                                        <div className="text-xs text-slate-400">{parcel.receiverPhone}</div>
+                                    </td>
+                                    <td className="p-2 lg:p-4 text-slate-600 text-xs lg:text-sm hidden md:table-cell">{parcel.weight}</td>
+                                    <td className="p-2 lg:p-4 text-right font-medium text-xs lg:text-sm">{parcel.price}</td>
+                                    <td className="p-2 lg:p-4 text-center">
+                                        <span className={clsx("px-2 py-0.5 lg:py-1 rounded text-xs font-bold", parcel.paymentStatus === 'PAID' ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600")}>
+                                            {parcel.paymentStatus}
+                                        </span>
+                                    </td>
+                                    <td className="p-2 lg:p-4 text-center">
+                                        <button
+                                            onClick={() => handleStatusChange(parcel.id, parcel.status)}
+                                            className={clsx(
+                                                "flex items-center gap-1 px-2 lg:px-3 py-0.5 lg:py-1 rounded-full text-xs font-bold transition-all mx-auto",
+                                                parcel.status === 'DELIVERED'
+                                                    ? "bg-green-500 text-white shadow-green-200 shadow-lg"
+                                                    : "bg-amber-100 text-amber-600 hover:bg-amber-200"
+                                            )}
+                                        >
+                                            {parcel.status === 'DELIVERED' ? <CheckCircle size={12} /> : <Clock size={12} />}
+                                            <span className="hidden sm:inline">{parcel.status === 'DELIVERED' ? 'จัดส่งแล้ว' : 'รอส่ง'}</span>
+                                        </button>
+                                    </td>
+                                    <td className="p-2 lg:p-4 text-xs lg:text-sm text-slate-500">{parcel.seller?.name || '-'}</td>
+                                    <td className="p-2 lg:p-4 sticky right-0 bg-white">
+                                        <div className="flex justify-center gap-1 lg:gap-2">
+                                            <button onClick={() => handlePrint(parcel)} className="p-1.5 lg:p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="พิมพ์ใบเสร็จ">
+                                                <Printer size={16} className="lg:w-4 lg:h-4" />
+                                            </button>
+                                            <button onClick={() => handleEditClick(parcel)} className="p-1.5 lg:p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors" title="แก้ไข">
+                                                <Edit2 size={16} className="lg:w-4 lg:h-4" />
+                                            </button>
+                                            {user?.role !== 'STAFF' && (
+                                                <button onClick={() => handleDelete(parcel.id)} className="p-1.5 lg:p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="ลบ">
+                                                    <Trash2 size={16} className="lg:w-4 lg:h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {/* Edit Modal */}
